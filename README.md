@@ -83,7 +83,6 @@ Traditional POS systems treat sales records and inventory ledgers as loosely cou
 
 
 
----
 
 ## Terminal Download & Installation
 
@@ -108,6 +107,7 @@ sudo dpkg -i db-frontend_0.1.0_amd64.deb
 Follow these steps to launch both services:
 
 ### 1. Start the Backend & Database
+
 ```bash
 cd ~/counterstock/backend
 docker compose up -d --build
