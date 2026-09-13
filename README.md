@@ -14,10 +14,9 @@ Traditional POS systems treat sales records and inventory ledgers as loosely cou
 
 ## Video Demonstration & Pitch
 
-> **Project Pitch & Walkthrough (MP4):**  
-> 🎬 **[Watch / Download `docs/counterstock_pitch.mp4`](docs/counterstock_pitch.mp4)**  
-> *(Click the link above to view or download the presentation pitch)*
+[![Watch the Pitch & Demo](https://img.youtube.com/vi/N1YBXGlobhc/0.jpg)](https://www.youtube.com/watch?v=N1YBXGlobhc)
 
+> 🎬 **[Click here to watch the CounterStock Project Pitch & Live Walkthrough on YouTube](https://www.youtube.com/watch?v=N1YBXGlobhc)**
 ---
 
 ## Deliverables & Documentation
