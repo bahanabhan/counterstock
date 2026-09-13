@@ -1,0 +1,200 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.2cm, top=2.8cm, bottom=2.8cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\usepackage{colortbl}
+
+% --- THGA Lecture Color Theme ---
+\definecolor{thgablue}{HTML}{003366}
+\definecolor{thgared}{HTML}{A00000}
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{tableheader}{HTML}{E8EEF5}
+\definecolor{boxframe}{HTML}{B8D0E8}
+\definecolor{boxbg}{HTML}{F0F5FA}
+
+% --- Section Styling ---
+\titleformat{\section}
+  {\color{thgablue}\normalfont\Large\bfseries}
+  {\color{thgablue}\thesection}{1em}{}[\color{thgablue}\titlerule]
+
+\titleformat{\subsection}
+  {\color{thgablue}\normalfont\large\bfseries}
+  {\color{thgablue}\thesubsection}{1em}{}
+
+% --- Header / Footer ---
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small\textbf{\color{thgablue}CounterStock} --- Technical Manual}
+\rhead{\small\color{gray}Baha Eddine Nabhan \quad September 2026}
+\lfoot{\small\texttt{\color{thgared}baha@counterstock.local}}
+\cfoot{\small\color{gray}THGA Bochum}
+\rfoot{\small\textbf{\color{thgablue}\thepage}}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- Listing Style ---
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{codebg},
+    frame=leftline,
+    framerule=2pt,
+    rulecolor=\color{thgablue},
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{thgared}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{thgablue}
+}
+
+\begin{document}
+
+% --- Title Block (Single-line Title) ---
+\noindent
+{\LARGE\textbf{\color{thgablue}CounterStock: Developer Guide}} \hfill {\large\textbf{\color{thgared}Winter Semester 2026}}\\[0.2cm]
+{\small Architecture, Concurrency \& Extension Guide} \hfill {\small THGA Bochum}\\
+{\small Instructor: Stephan B\"okelmann} \hfill {\small Informationstechnik und Digitalisierung}\\[0.25cm]
+{\color{thgablue}\hrule height 1.5pt}
+
+% --- Centered Table of Contents Block ---
+\vspace*{\fill}
+
+\begin{center}
+\parbox{0.92\textwidth}{
+  \renewcommand{\contentsname}{\centering\LARGE\color{thgablue}Table of Contents}
+  \tableofcontents
+}
+\end{center}
+
+\vspace{1.2cm}
+\noindent\fcolorbox{boxframe}{boxbg}{%
+\parbox{0.97\textwidth}{%
+\textbf{\color{thgablue}Developer Note:} This technical specification covers relational integrity rules, transaction bounds with \texttt{SELECT \dots FOR UPDATE}, the testing suite, and a 4-step walkthrough for extending the API and UI.
+}}
+
+\vspace*{\fill}
+
+\newpage
+
+\section{System Architecture}
+CounterStock implements an enterprise 3-tier structure designed for relational data integrity, headless service consumption, and multi-client scale.
+
+\vspace{0.2cm}
+\noindent\fcolorbox{boxframe}{boxbg}{%
+\parbox{0.97\textwidth}{%
+\textbf{\color{thgablue}3-Tier Architecture Overview:}
+\begin{itemize}
+    \item \textbf{Data Tier:} PostgreSQL 16 (Third Normal Form) running inside an isolated Docker network.
+    \item \textbf{Application Tier:} Asynchronous FastAPI gateway managing connection pooling via \texttt{psycopg2.extras.RealDictCursor}.
+    \item \textbf{Presentation Tier:} Decoupled Python Tkinter client packaged into a standalone Debian installer.
+\end{itemize}
+}}
+\vspace{0.3cm}
+
+\section{Database Schema and Relational Constraints}
+The relational model normalizes stock, menus, recipes, and transactions across 6 entities.
+
+\begin{lstlisting}[language=SQL]
+-- Integrity constraints from init.sql
+CREATE TABLE ingredients (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    stock_quantity NUMERIC(10, 2) NOT NULL CHECK (stock_quantity >= 0),
+    unit VARCHAR(20) NOT NULL,
+    reorder_threshold NUMERIC(10, 2) NOT NULL DEFAULT 5.0
+);
+
+CREATE TABLE recipes (
+    menu_item_id INT REFERENCES menu_items(id) ON DELETE CASCADE,
+    ingredient_id INT REFERENCES ingredients(id) ON DELETE RESTRICT,
+    quantity_required NUMERIC(10, 2) NOT NULL CHECK (quantity_required > 0),
+    PRIMARY KEY (menu_item_id, ingredient_id)
+);
+\end{lstlisting}
+
+\section{Concurrency Control \& Race Condition Prevention}
+A central risk in POS gastronomy is concurrent requests competing for limited stock. CounterStock resolves race conditions using pessimistic row-level locking:
+
+\begin{lstlisting}[language=SQL]
+-- Atomic row-locking during order deduction
+SELECT id, name, stock_quantity 
+FROM ingredients 
+WHERE id = ANY(%s) 
+FOR UPDATE;
+\end{lstlisting}
+
+\noindent\textbf{\color{thgared}Locking Mechanism:} The \texttt{FOR UPDATE} clause locks the selected ingredient rows in the PostgreSQL engine. Concurrent transactions attempting to read or decrement the same rows wait until the active transaction commits or rolls back, completely eliminating phantom stock reads and overselling.
+
+\section{Step-by-Step Guide: Adding a New Feature}
+To illustrate how the system can be extended, this guide walks through adding an \textbf{Ingredient Deletion Feature}.
+
+\subsection{Step 1: Backend Endpoint Implementation}
+Open \texttt{backend/main.py} and define the authenticated endpoint:
+\begin{lstlisting}[language=Python]
+@app.delete("/ingredients/{ing_id}", dependencies=[Depends(verify_token)])
+def delete_ingredient(ing_id: int, conn=Depends(get_db)):
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM ingredients WHERE id = %s RETURNING id;", 
+                (ing_id,)
+            )
+            deleted = cur.fetchone()
+            if not deleted:
+                raise HTTPException(status_code=404, detail="Ingredient not found")
+            return {"status": "success", "deleted_id": ing_id}
+\end{lstlisting}
+
+\subsection{Step 2: API Client Expansion}
+In \texttt{frontend/src/db\_frontend/api.py}, expose the call:
+\begin{lstlisting}[language=Python]
+def delete_ingredient(ing_id: int):
+    r = requests.delete(f"{BASE_URL}/ingredients/{ing_id}", headers=HEADERS, timeout=5)
+    if r.status_code != 200:
+        raise ValueError(f"HTTP Error {r.status_code}: {r.text}")
+    return r.json()
+\end{lstlisting}
+
+\subsection{Step 3: Frontend Interface Action}
+In \texttt{frontend/src/db\_frontend/ui.py}, bind a button with an explicit confirmation dialog:
+\begin{lstlisting}[language=Python]
+def _on_delete_click(self):
+    if messagebox.askyesno("Confirm", "Are you sure you want to delete this ingredient?"):
+        api.delete_ingredient(self.selected_ing_id)
+        self._refresh()
+\end{lstlisting}
+
+\subsection{Step 4: Acceptance Test Validation}
+In \texttt{backend/test\_api.py}, write the test case:
+\begin{lstlisting}[language=Python]
+def test_delete_ingredient_auth_protection():
+    res = requests.delete(f"{BASE_URL}/ingredients/1")
+    assert res.status_code == 401
+\end{lstlisting}
+
+\section{System Upgrade Roadmap}
+The decoupled design supports several clean upgrade paths:
+\begin{itemize}
+    \item \textbf{Kitchen Display WebSockets:} Migrate order event propagation from polling to push-based WebSockets.
+    \item \textbf{Role-Based Access Control (RBAC):} Upgrade basic static tokens to signed JSON Web Tokens (JWT) carrying cashier versus supervisor scopes.
+    \item \textbf{Automated Purchase Orders:} Celery worker task that queries low-stock items nightly and generates automated supplier order drafts.
+\end{itemize}
+
+\section{Frequently Asked Questions (FAQ)}
+\begin{description}
+    \item[\color{thgablue}Q: Why use psycopg2 instead of an ORM like SQLAlchemy?]~\\
+    Raw SQL gives full, predictable control over transaction boundaries, isolation levels, and \texttt{SELECT ... FOR UPDATE} row locks without unintended abstraction layers.
+    \item[\color{thgablue}Q: Why use NUMERIC(10,2) instead of FLOAT for inventory?]~\\
+    Floating-point numbers introduce binary rounding inaccuracies. \texttt{NUMERIC(10,2)} guarantees exact fractional arithmetic for weight and volume.
+    \item[\color{thgablue}Q: How is the desktop client packaged?]~\\
+    PyInstaller freezes the application and its dependencies into a standalone directory, which \texttt{fpm} bundles into a standard Debian archive.
+\end{description}
+
+\end{document}

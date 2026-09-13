@@ -1,0 +1,10 @@
+\contentsline {section}{\numberline {1}System Architecture}{2}{section.1}%
+\contentsline {section}{\numberline {2}Database Schema and Relational Constraints}{2}{section.2}%
+\contentsline {section}{\numberline {3}Concurrency Control \& Race Condition Prevention}{2}{section.3}%
+\contentsline {section}{\numberline {4}Step-by-Step Guide: Adding a New Feature}{2}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Step 1: Backend Endpoint Implementation}{3}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Step 2: API Client Expansion}{3}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Step 3: Frontend Interface Action}{3}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Step 4: Acceptance Test Validation}{3}{subsection.4.4}%
+\contentsline {section}{\numberline {5}System Upgrade Roadmap}{3}{section.5}%
+\contentsline {section}{\numberline {6}Frequently Asked Questions (FAQ)}{4}{section.6}%
