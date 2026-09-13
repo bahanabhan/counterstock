@@ -25,7 +25,7 @@ Traditional POS systems treat sales records and inventory ledgers as loosely cou
 |---|---|---|
 | **User Manual** | [Download PDF](docs/user_manual.pdf) | Cashier workflow, POS terminal authentication, dynamic ordering, HTTP 409 conflict handling, and delivery intake |
 | **Developer Guide** | [Download PDF](docs/developer_docs.pdf) | 3NF database schema, FastAPI concurrency handling, Docker orchestration, and test suite execution |
-| **Debian Package** | [Download .deb](pkg/db-frontend_0.1.0_amd64.deb) | Pre-compiled native client package targeted for Ubuntu/Debian operating environments |
+| **Debian Package** | [Download .deb](https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb) | Pre-compiled native client package targeted for Ubuntu/Debian operating environments |
 
 ---
 
@@ -74,8 +74,14 @@ Traditional POS systems treat sales records and inventory ledgers as loosely cou
 │                              │ total, timestamp  │                          │
 │                              └───────────────────┘                          │
 └─────────────────────────────────────────────────────────────────────────────┘
-
+```
 ---
+
+
+
+
+
+
 
 ---
 
@@ -91,8 +97,7 @@ cd counterstock
 
 ### Option B: Download & Install the Debian Package Directly
 ```bash
-wget https://raw.githubusercontent.com/bahanabhan/counterstock/main/pkg/db-frontend_0.1.0_amd64.deb
-```
+wget [https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb](https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb) ```
 ```bash
 sudo dpkg -i db-frontend_0.1.0_amd64.deb
 ```
