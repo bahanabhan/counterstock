@@ -75,3 +75,40 @@ Traditional POS systems treat sales records and inventory ledgers as loosely cou
 │                              │ total, timestamp  │                          │
 │                              └───────────────────┘                          │
 └─────────────────────────────────────────────────────────────────────────────┘
+
+---
+
+## Terminal Download & Installation
+
+You can clone the entire repository or fetch only the pre-compiled frontend package directly using your terminal:
+
+### Option A: Clone the Full Project Repository
+```bash
+git clone [https://github.com/bahanabhan/counterstock.git](https://github.com/bahanabhan/counterstock.git)
+cd counterstock
+
+### Option B: Download & Install the Debian Package Directly
+
+# Download the .deb installer directly from GitHub
+wget [https://raw.githubusercontent.com/bahanabhan/counterstock/main/pkg/db-frontend_0.1.0_amd64.deb](https://raw.githubusercontent.com/bahanabhan/counterstock/main/pkg/db-frontend_0.1.0_amd64.deb)
+
+# Install on Ubuntu/Debian
+sudo dpkg -i db-frontend_0.1.0_amd64.deb
+
+### 1. Start the Backend & Database
+```bash
+cd ~/counterstock/backend
+docker compose up -d --build
+```
+
+### 2. Launch the Frontend POS Terminal
+If installed via the Debian package:
+```bash
+db-frontend
+```
+
+Or run directly from the source repository:
+```bash
+python3 ~/counterstock/frontend/app.py
+```
+
