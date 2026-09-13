@@ -97,8 +97,7 @@ cd counterstock
 
 ### Option B: Download & Install the Debian Package Directly
 ```bash
-wget [https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb](https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb) ```
-```bash
+wget [https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb](https://github.com/bahanabhan/counterstock/releases/download/v0.1.0/db-frontend_0.1.0_amd64.deb)
 sudo dpkg -i db-frontend_0.1.0_amd64.deb
 ```
 
